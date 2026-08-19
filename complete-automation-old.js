@@ -2,18 +2,8 @@ const { chromium } = require("playwright");
 
 const db = require("./database");
 const { decrypt } = require("./crypto");
-
 const { saveDevice } = require("./save-device");
 const { saveDeviceLog } = require("./save-device-log");
-
-const {
-  createAutomationRun,
-  completeAutomationRun
-} = require("./automation-run");
-
-const {
-  saveRunResult
-} = require("./save-run-result");
 
 
 // ==========================================
@@ -37,7 +27,7 @@ async function getAccounts() {
 
 
 // ==========================================
-// EK ACCOUNT CHECK KARNA
+// EK ACCOUNT KO CHECK KARNA
 // ==========================================
 
 async function checkAccount(browser, account) {
@@ -52,14 +42,18 @@ async function checkAccount(browser, account) {
     console.log(`Checking: ${account.customer_name}`);
     console.log("=================================");
 
-
     // Password decrypt
     const password = decrypt(
       account.password_encrypted
     );
 
+    console.log("Password decrypted: YES");
 
-    // Login page
+
+    // ------------------------------------------
+    // SAMASTH LOGIN PAGE OPEN
+    // ------------------------------------------
+
     await page.goto(
       "https://upc.samasth.io/",
       {
@@ -68,7 +62,10 @@ async function checkAccount(browser, account) {
     );
 
 
-    // Email field wait
+    // ------------------------------------------
+    // LOGIN
+    // ------------------------------------------
+
     await page.locator(
       'input[type="email"]'
     ).waitFor({
@@ -76,7 +73,6 @@ async function checkAccount(browser, account) {
     });
 
 
-    // Credentials fill
     await page
       .locator('input[type="email"]')
       .fill(account.username.trim());
@@ -90,13 +86,12 @@ async function checkAccount(browser, account) {
     console.log("Credentials entered");
 
 
-    // Login button
     await page.getByRole("button", {
       name: "Login"
     }).click();
 
 
-    // Dashboard wait
+    // Dashboard ka wait
     await page.waitForURL(/home/, {
       timeout: 15000
     });
@@ -144,77 +139,55 @@ async function checkAccount(browser, account) {
       `Total Devices Found: ${devices.length}`
     );
 
-    // inactive device ka data bhi extract hoga 
-    
-    console.log("\n===== ALL EXTRACTED DEVICES =====");
-
-console.table(devices);
-
-const activeDevices = devices.filter(
-  device => device.status === "Active"
-);
-
-const inactiveDevices = devices.filter(
-  device => device.status === "Inactive"
-);
-
-console.log(
-  `Active Devices Extracted: ${activeDevices.length}`
-);
-
-console.log(
-  `Inactive Devices Extracted: ${inactiveDevices.length}`
-);
-
 
     // ==========================================
-    // DEVICES SAVE + HISTORY LOG
+    // HAR DEVICE DATABASE MEIN SAVE KARO
     // ==========================================
 
     for (const device of devices) {
 
       console.log(
-        `Processing: ${device.label}`
+        `\nProcessing Device: ${device.label}`
       );
 
 
-      // Latest device data update
+      // Latest device data save/update
       const deviceId = await saveDevice(
         account.id,
         device
       );
 
 
-      // History save
+      // History log save
       await saveDeviceLog(
         deviceId,
         device
       );
 
+
+      console.log(
+        `Completed: ${device.label}`
+      );
+
     }
 
-
-    // SUCCESS RESULT RETURN
 
     return {
       accountId: account.id,
       customerName: account.customer_name,
       devicesFound: devices.length,
-      result: "Success",
-      error: null
+      result: "Success"
     };
 
 
   } catch (error) {
 
     console.error(
-      `❌ ERROR: ${account.customer_name}`
+      `❌ ERROR for ${account.customer_name}:`
     );
 
     console.error(error.message);
 
-
-    // FAILED RESULT RETURN
 
     return {
       accountId: account.id,
@@ -235,13 +208,12 @@ console.log(
 
 
 // ==========================================
-// MAIN AUTOMATION
+// MAIN FUNCTION
 // ==========================================
 
 async function main() {
 
   let browser;
-  let runId;
 
   try {
 
@@ -250,10 +222,7 @@ async function main() {
     console.log("=================================\n");
 
 
-    // ------------------------------------------
-    // ACTIVE ACCOUNTS
-    // ------------------------------------------
-
+    // Database se accounts
     console.log(
       "Reading active accounts from MySQL..."
     );
@@ -278,24 +247,7 @@ async function main() {
     }
 
 
-    // ------------------------------------------
-    // CREATE AUTOMATION RUN
-    // ------------------------------------------
-
-    runId = await createAutomationRun(
-      accounts.length
-    );
-
-
-    console.log(
-      `Current Run ID: ${runId}`
-    );
-
-
-    // ------------------------------------------
-    // BROWSER START
-    // ------------------------------------------
-
+    // Browser start
     browser = await chromium.launch({
       headless: false
     });
@@ -304,9 +256,9 @@ async function main() {
     const results = [];
 
 
-    // ------------------------------------------
-    // PROCESS EVERY ACCOUNT
-    // ------------------------------------------
+    // ==========================================
+    // HAR ACCOUNT KO CHECK KARO
+    // ==========================================
 
     for (const account of accounts) {
 
@@ -319,48 +271,16 @@ async function main() {
       results.push(result);
 
 
-      // Save account-wise result
-      await saveRunResult(
-        runId,
-        result
-      );
-
-
-      // Small delay before next account
+      // Next account se pehle 2 second
       await new Promise(resolve =>
-        setTimeout(resolve, 1500)
+        setTimeout(resolve, 2000)
       );
 
     }
 
 
     // ==========================================
-    // SUCCESS / FAILED COUNT
-    // ==========================================
-
-    const successCount = results.filter(
-      item => item.result === "Success"
-    ).length;
-
-
-    const failedCount = results.filter(
-      item => item.result === "Failed"
-    ).length;
-
-
-    // ==========================================
-    // COMPLETE AUTOMATION RUN
-    // ==========================================
-
-    await completeAutomationRun(
-      runId,
-      successCount,
-      failedCount
-    );
-
-
-    // ==========================================
-    // FINAL OUTPUT
+    // FINAL RESULT
     // ==========================================
 
     console.log("\n=================================");
@@ -371,34 +291,12 @@ async function main() {
     console.table(results);
 
 
-    console.log("\nFINAL SUMMARY:");
-
-    console.log(
-      `Run ID: ${runId}`
-    );
-
-    console.log(
-      `Total Accounts: ${accounts.length}`
-    );
-
-    console.log(
-      `Success: ${successCount}`
-    );
-
-    console.log(
-      `Failed: ${failedCount}`
-    );
-
-
   } catch (error) {
 
-    console.error("\n❌ MAIN ERROR:");
+    console.error("\nMAIN ERROR:");
 
     console.error(error.message);
 
-
-    // Agar run create ho chuka tha aur beech mein
-    // major error aaya, to future mein isko Failed mark karenge.
 
   } finally {
 
@@ -407,6 +305,7 @@ async function main() {
       await browser.close();
 
     }
+
 
     process.exit();
 
