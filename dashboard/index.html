@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Samasth Monitoring Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div class="logo-section">
+
+            <div class="logo">
+                S
+            </div>
+
+            <div>
+                <h1>Pioneer MONITORING</h1>
+
+                <p>
+                    Device Monitoring Dashboard
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="server-status">
+
+            <span class="status-dot"></span>
+
+            System Online
+
+        </div>
+
+    </header>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="container">
+
+
+        <!-- SUMMARY CARDS -->
+
+        <section class="summary-grid">
+
+            <div class="card">
+
+                <span class="card-label">
+                    TOTAL COMPANIES
+                </span>
+
+                <h2 id="totalCompanies">
+                    --
+                </h2>
+
+            </div>
+
+
+            <div class="card">
+
+                <span class="card-label">
+                    TOTAL DEVICES
+                </span>
+
+                <h2 id="totalDevices">
+                    --
+                </h2>
+
+            </div>
+
+
+            <div class="card active-card">
+
+                <span class="card-label">
+                    ACTIVE DEVICES
+                </span>
+
+                <h2 id="activeDevices">
+                    --
+                </h2>
+
+            </div>
+
+
+            <div class="card inactive-card">
+
+                <span class="card-label">
+                    INACTIVE DEVICES
+                </span>
+
+                <h2 id="inactiveDevices">
+                    --
+                </h2>
+
+            </div>
+
+        </section>
+
+
+        <!-- AUTOMATION RUN -->
+
+        <section class="automation-card">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Latest Automation Run
+                    </h2>
+
+                    <p>
+                        Last device monitoring process
+                    </p>
+
+                </div>
+
+                <span id="runStatus" class="run-status">
+                    Loading...
+                </span>
+
+            </div>
+
+
+            <div class="run-details">
+
+                <div>
+
+                    <span>Run ID</span>
+
+                    <strong id="runId">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>Total Accounts</span>
+
+                    <strong id="runAccounts">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>Successful</span>
+
+                    <strong id="runSuccess">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>Failed</span>
+
+                    <strong id="runFailed">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>Last Completed</span>
+
+                    <strong id="runCompleted">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- COMPANY TABLE -->
+
+        <section class="companies-section">
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Company Monitoring
+                    </h2>
+
+                    <p>
+                        Click on a company to view device details
+                    </p>
+
+                </div>
+
+
+                <div class="company-actions">
+
+                    <button id="addCompanyButton" class="add-company-button">
+                        + Add Company
+                    </button>
+
+                    <button id="refreshButton" class="refresh-button">
+                        Refresh
+                    </button>
+
+                </div>
+                <button id="refreshButton" class="refresh-button">
+                    Refresh
+                </button>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Company
+                            </th>
+
+                            <th>
+                                Total Devices
+                            </th>
+
+                            <th>
+                                Active
+                            </th>
+
+                            <th>
+                                Inactive
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="companyTable">
+
+                        <tr>
+
+                            <td colspan="5" class="loading">
+                                Loading companies...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- DEVICE MODAL -->
+
+    <div id="deviceModal" class="modal">
+
+        <div class="modal-content">
+
+            <button id="closeModal" class="close-button">
+                ×
+            </button>
+
+
+            <div class="modal-header">
+
+                <h2 id="modalCompanyName">
+                    Company Devices
+                </h2>
+
+                <p id="modalDeviceCount">
+                </p>
+
+            </div>
+
+
+            <div id="deviceList" class="device-list">
+
+                Loading...
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ADD COMPANY MODAL -->
+
+    <div id="addCompanyModal" class="modal">
+
+        <div class="modal-content add-company-modal">
+
+            <button id="closeAddCompanyModal" class="close-button">
+                ×
+            </button>
+
+
+            <div class="modal-header">
+
+                <h2>
+                    Add New Company
+                </h2>
+
+                <p>
+                    Add a Samasth monitoring account
+                </p>
+
+            </div>
+
+
+            <form id="addCompanyForm">
+
+                <!-- COMPANY NAME -->
+
+                <div class="form-group">
+
+                    <label for="companyName">
+                        Company Name
+                    </label>
+
+                    <input type="text" id="companyName" name="customer_name" placeholder="Enter company name" required>
+
+                </div>
+
+
+                <!-- USERNAME -->
+
+                <div class="form-group">
+
+                    <label for="companyUsername">
+                        Username
+                    </label>
+
+                    <input type="text" id="companyUsername" name="username" placeholder="Enter Samasth username"
+                        required>
+
+                </div>
+
+
+                <!-- PASSWORD -->
+
+                <div class="form-group">
+
+                    <label for="companyPassword">
+                        Password
+                    </label>
+
+                    <input type="password" id="companyPassword" name="password" placeholder="Enter Samasth password"
+                        required>
+
+                </div>
+
+
+                <!-- FORM MESSAGE -->
+
+                <div id="addCompanyMessage" class="form-message"></div>
+
+
+                <!-- BUTTONS -->
+
+                <div class="form-actions">
+
+                    <button type="button" id="cancelAddCompany" class="cancel-button">
+                        Cancel
+                    </button>
+
+                    <button type="submit" id="saveCompanyButton" class="save-company-button">
+                        Add Company
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <!-- EDIT COMPANY MODAL -->
+
+<div
+  id="editCompanyModal"
+  class="modal"
+>
+
+  <div class="modal-content add-company-modal">
+
+    <button
+      id="closeEditCompanyModal"
+      class="close-button"
+    >
+      ×
+    </button>
+
+
+    <div class="modal-header">
+
+      <h2>
+        Edit Company
+      </h2>
+
+      <p>
+        Update company account details
+      </p>
+
+    </div>
+
+
+    <form id="editCompanyForm">
+
+      <!-- COMPANY NAME -->
+
+      <div class="form-group">
+
+        <label for="editCompanyName">
+          Company Name
+        </label>
+
+        <input
+          type="text"
+          id="editCompanyName"
+          required
+        >
+
+      </div>
+
+
+      <!-- USERNAME -->
+
+      <div class="form-group">
+
+        <label for="editCompanyUsername">
+          Username
+        </label>
+
+        <input
+          type="text"
+          id="editCompanyUsername"
+          required
+        >
+
+      </div>
+
+
+      <!-- PASSWORD -->
+
+      <div class="form-group">
+
+        <label for="editCompanyPassword">
+          New Password
+        </label>
+
+        <input
+          type="password"
+          id="editCompanyPassword"
+          placeholder="Leave blank to keep current password"
+        >
+
+      </div>
+
+
+      <!-- MESSAGE -->
+
+      <div
+        id="editCompanyMessage"
+        class="form-message"
+      ></div>
+
+
+      <!-- BUTTONS -->
+
+      <div class="form-actions">
+
+        <button
+          type="button"
+          id="cancelEditCompany"
+          class="cancel-button"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          id="updateCompanyButton"
+          class="save-company-button"
+        >
+          Update Company
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+    <script src="app.js"></script>
+
+</body>
+
+</html>
